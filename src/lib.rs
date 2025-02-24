@@ -5,7 +5,7 @@ pub mod state;
 pub mod prelude {
     use bevy::{color::Color, math::Vec2};
 
-    pub const UPDATE_INTERVAL_MS: u64 = 20;
+    pub const UPDATE_INTERVAL_MS: u64 = 40;
     pub const BG_COLOR: Color = Color::srgb(0.0, 0.1, 0.3);
 
     pub const BOARD_SIZE: u32 = 128;
@@ -13,7 +13,7 @@ pub mod prelude {
     pub const BORDER_WIDTH_PX: f32 = 8.0;
     pub const BORDER_COLOR: Color = Color::srgb(1.0, 1.0, 1.0);
 
-    pub const CELL_SIZE_PX: Vec2 = Vec2::splat(18.0);
+    pub const CELL_SIZE_PX: Vec2 = Vec2::splat(8.0);
     pub const CELL_SCALE: Vec2 = Vec2::splat(1.0);
     pub const CELL_ALIVE_COLOR: Color = Color::srgb(0.2, 1.0, 0.2);
     pub const CELL_CLICKED_COLOR: Color = Color::srgb(1.0, 1.0, 0.0);

@@ -14,9 +14,9 @@ fn main() {
                     primary_window: Some(Window {
                         resizable: true,
                         focused: true,
-                        present_mode: bevy::window::PresentMode::AutoVsync,
+                        present_mode: bevy::window::PresentMode::AutoNoVsync,
                         mode: bevy::window::WindowMode::Windowed,
-                        resolution: WindowResolution::new(800., 800.),
+                        resolution: WindowResolution::new(1000., 1000.),
                         ..default()
                     }),
                     ..default()

@@ -23,7 +23,7 @@ fn spawn_cam(mut commands: Commands) {
         },
         OrthographicProjection {
             scaling_mode: bevy::render::camera::ScalingMode::WindowSize,
-            scale: 0.8,
+            scale: 1.0,
             near: -1000.0,
             far: 1000.0,
             ..OrthographicProjection::default_2d()

@@ -2,8 +2,6 @@
 
 use std::time::Duration;
 
-// TODO: implement mouse drawing
-
 use bevy::{
     ecs::system::SystemState,
     input::common_conditions::input_just_pressed,
@@ -155,7 +153,9 @@ fn load_cell_board(
     // end of hover observer
     world.add_observer(cells_set_mats_on::<Pointer<Out>>(alive_mat, dead_mat));
     // clicked observer
-    world.add_observer(cells_set_life_on_clicked(clicked_mat));
+    world.add_observer(cells_set_life_on::<Pointer<Down>>(clicked_mat.clone()));
+    // drag-over observer
+    world.add_observer(cells_set_life_on::<Pointer<DragOver>>(clicked_mat));
     // end of click observer
     world.add_observer(cells_set_mats_on::<Pointer<Up>>(
         hovered_alive_mat,
@@ -245,17 +245,17 @@ fn load_cell_board(
 
 /// Returns an observer that changes the life status of a cell when clicked on, while also
 /// highlighting that cell by changing its material.
-fn cells_set_life_on_clicked(
-    highligh_mat: Handle<ColorMaterial>,
+fn cells_set_life_on<E>(
+    highlight_mat: Handle<ColorMaterial>,
 ) -> impl Fn(
-    Trigger<Pointer<Down>>,
+    Trigger<E>,
     Query<(&mut MeshMaterial2d<ColorMaterial>, &mut CurrentAlive), With<Cell>>,
     Res<State<GameState>>,
 ) {
     move |trigger, mut query, state| {
         if matches!(state.get(), GameState::Setup) {
             if let Ok((mut material, mut alive)) = query.get_mut(trigger.entity()) {
-                material.0 = highligh_mat.clone();
+                material.0 = highlight_mat.clone();
                 alive.0 = !alive.0;
             }
         }
@@ -452,13 +452,24 @@ impl Board {
             // filter out if pos_offs is (0, 0)
             .filter(|pos_offs| !(pos_offs.x == 0 && pos_offs.y == 0))
             .enumerate()
-            .map(|(i, pos_offs)| (i, cell_coord.as_ivec2() + pos_offs))
+            .map(|(i, pos_offs)| {
+                let pos = cell_coord.as_ivec2() + pos_offs;
+                let mut neigh_pos = pos.as_uvec2();
+                if pos.x < 0 {
+                    neigh_pos.x = self.size - 1;
+                } else if pos.x >= self.size as i32 {
+                    neigh_pos.x = 0;
+                }
+                if pos.y < 0 {
+                    neigh_pos.y = self.size - 1;
+                } else if pos.y >= self.size as i32 {
+                    neigh_pos.y = 0;
+                }
+
+                (i, neigh_pos)
+            })
         {
-            result[i] = self.cell_coord_to_idx(
-                neigh_pos
-                    .clamp(ivec2(0, 0), IVec2::splat(self.size as i32))
-                    .as_uvec2(),
-            );
+            result[i] = self.cell_coord_to_idx(neigh_pos);
         }
 
         result
@@ -506,7 +517,6 @@ mod test {
         );
 
         let neigh1_1 = board.neighbour_indices(pos1_1);
-        assert_eq!(8, neigh1_1.len());
         let expected_1_1 = [
             board.cell_coord_to_idx(uvec2(0, 0)),
             board.cell_coord_to_idx(uvec2(1, 0)),
@@ -518,5 +528,18 @@ mod test {
             board.cell_coord_to_idx(uvec2(2, 2)),
         ];
         assert_eq!(expected_1_1, neigh1_1);
+
+        let neigh0_1 = board.neighbour_indices(uvec2(0, 1));
+        let expected_0_1 = [
+            board.cell_coord_to_idx(uvec2(7, 0)),
+            board.cell_coord_to_idx(uvec2(0, 0)),
+            board.cell_coord_to_idx(uvec2(1, 0)),
+            board.cell_coord_to_idx(uvec2(7, 1)),
+            board.cell_coord_to_idx(uvec2(1, 1)),
+            board.cell_coord_to_idx(uvec2(7, 2)),
+            board.cell_coord_to_idx(uvec2(0, 2)),
+            board.cell_coord_to_idx(uvec2(1, 2)),
+        ];
+        assert_eq!(expected_0_1, neigh0_1);
     }
 }
